@@ -11,7 +11,6 @@ use elfshaker::repo::{Repository, SnapshotId};
 pub(crate) const SUBCOMMAND: &str = "list-files";
 
 pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
     let snapshot = matches
         .value_of_lossy("snapshot")
         .expect("expected snapshot");
@@ -19,7 +18,7 @@ pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         .value_of_lossy("format")
         .expect("<format> not provided");
 
-    let repo = open_repo_from_cwd(data_dir)?;
+    let repo = open_repo_from_cwd(matches)?;
 
     let snapshot_id = repo.find_snapshot(&snapshot)?;
 

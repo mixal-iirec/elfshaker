@@ -5,10 +5,10 @@ use elfshaker::log::measure;
 use elfshaker::progress::ProgressReporter;
 use elfshaker::repo::{Error as RepoError, Repository};
 
+use clap::ArgMatches;
 use lazy_static::lazy_static;
 use log::info;
 use std::io::Write;
-use std::path::Path;
 use std::sync::{
     atomic::{AtomicIsize, Ordering},
     Arc,
@@ -108,7 +108,8 @@ pub fn format_size(bytes: u64) -> String {
 
 /// Opens the repo from the current work directory and logs some standard
 /// stats about the process.
-pub fn open_repo_from_cwd(data_dir: &Path) -> Result<Repository, RepoError> {
+pub fn open_repo_from_cwd(matches: &ArgMatches) -> Result<Repository, RepoError> {
+    let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
     // Open repo from cwd.
     let repo_path = std::env::current_dir()?;
     info!("Opening repository...");

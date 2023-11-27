@@ -21,7 +21,6 @@ pub(crate) const SUBCOMMAND: &str = "pack";
 const DEFAULT_COMPRESSION_WINDOW_LOG: u32 = 28;
 
 pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
     // Parse pack name
     let pack = matches.value_of("pack").unwrap();
     let snapshots_from = matches.value_of("snapshots-from");
@@ -62,7 +61,7 @@ pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         n => n,
     };
 
-    let mut repo = open_repo_from_cwd(data_dir)?;
+    let mut repo = open_repo_from_cwd(matches)?;
 
     let open = |filename| {
         if filename == "-" {

@@ -17,7 +17,6 @@ pub(crate) const SUBCOMMAND: &str = "gc";
 /// We GC the loose snapshots first and then use the remaining loose snapshots
 /// as the roots in the "object graph" for reachability analysis.
 pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
     let dry_run = matches.is_present("dry_run");
     let loose_snapshots = matches.is_present("loose_snapshots");
     let loose_objects = matches.is_present("loose_objects");
@@ -30,7 +29,7 @@ pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         return Err("Invalid options!".into());
     }
 
-    let repo = open_repo_from_cwd(data_dir)?;
+    let repo = open_repo_from_cwd(matches)?;
     let mut remaining_roots = repo.loose_packs()?;
 
     let mut freed_bytes = 0;

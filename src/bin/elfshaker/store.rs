@@ -38,7 +38,7 @@ pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
 
     fs::create_dir_all(data_dir)?;
 
-    let mut repo = open_repo_from_cwd(data_dir)?;
+    let mut repo = open_repo_from_cwd(matches)?;
     repo.create_snapshot(&snapshot, files.into_iter())?;
 
     Ok(())

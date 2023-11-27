@@ -10,12 +10,11 @@ use elfshaker::repo::{PackId, Repository};
 pub(crate) const SUBCOMMAND: &str = "list-packs";
 
 pub(crate) fn run(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
     let format = matches
         .value_of_lossy("format")
         .expect("<format> not provided");
 
-    let repo = open_repo_from_cwd(data_dir)?;
+    let repo = open_repo_from_cwd(matches)?;
 
     print_packs(&repo, &format)?;
 
