@@ -84,6 +84,12 @@ fn get_app() -> App<'static, 'static> {
                 .global(true),
         )
         .arg(
+            Arg::with_name("readonly_data")
+                .long("readonly-data")
+                .help("Disables auxiliary writes such as lockfile for readonly data_dir.")
+                .global(true),
+        )
+        .arg(
             Arg::with_name("data_dir")
                 .long("data-dir")
                 .env("ELFSHAKER_DATA")
