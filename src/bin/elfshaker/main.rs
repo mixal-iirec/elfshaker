@@ -86,7 +86,7 @@ fn get_app() -> App<'static, 'static> {
         .arg(
             Arg::with_name("readonly_data")
                 .long("readonly-data")
-                .help("Disables auxiliary writes such as lockfile for readonly data_dir.")
+                .help("Disables auxiliary writes for readonly data_dir. It is not allowed to modify a repository which is concurrently being read by another process invoked with --readonly-data.")
                 .global(true),
         )
         .arg(
