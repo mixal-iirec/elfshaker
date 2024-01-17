@@ -3,7 +3,7 @@
 
 use elfshaker::log::measure;
 use elfshaker::progress::ProgressReporter;
-use elfshaker::repo::{Error as RepoError, Repository};
+use elfshaker::repo::{Error as RepoError, Repository, RepositoryOptions};
 
 use clap::ArgMatches;
 use lazy_static::lazy_static;
@@ -110,12 +110,13 @@ pub fn format_size(bytes: u64) -> String {
 /// stats about the process.
 pub fn open_repo_from_cwd(matches: &ArgMatches) -> Result<Repository, RepoError> {
     let data_dir = std::path::Path::new(matches.value_of("data_dir").unwrap());
-    let readonly = matches.is_present("readonly_data");
+    let mut options = RepositoryOptions::default();
+    options.set_readonly(matches.is_present("readonly_data"));
     // Open repo from cwd.
     let repo_path = std::env::current_dir()?;
     info!("Opening repository...");
     let (elapsed, open_result) =
-        measure(|| Repository::open_with_data_dir(repo_path, data_dir, readonly));
+        measure(|| Repository::open_with_data_dir(repo_path, data_dir, options));
     info!("Opening repository took {:?}", elapsed);
     open_result
 }

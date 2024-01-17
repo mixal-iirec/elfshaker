@@ -38,7 +38,34 @@ use crate::{
     packidx::{ObjectMetadata, LOOSE_OBJECT_OFFSET},
 };
 
-/// A struct specifying the the extract options.
+/// A struct specifying the repository options.
+#[derive(Clone, Debug)]
+pub struct RepositoryOptions {
+    /// Disables auxiliary writes for otherwise read operations.
+    /// For example disables lockfile and HEAD.
+    readonly: bool,
+}
+
+impl RepositoryOptions {
+    /// Disables auxiliary writes for otherwise read operations.
+    /// For example disables lockfile and HEAD.
+    pub fn readonly(&self) -> bool {
+        self.readonly
+    }
+    /// Disables auxiliary writes for otherwise read operations.
+    /// For example disables lockfile and HEAD.
+    pub fn set_readonly(&mut self, value: bool) {
+        self.readonly = value;
+    }
+}
+
+impl Default for RepositoryOptions {
+    fn default() -> Self {
+        Self { readonly: false }
+    }
+}
+
+/// A struct specifying the extract options.
 #[derive(Clone, Debug)]
 pub struct ExtractOptions {
     /// Toggle checksum verification.
@@ -133,9 +160,8 @@ pub struct Repository {
     path: PathBuf,
     /// The path for the elfshaker repository.
     data_dir: PathBuf,
-    /// Disables auxiliary writes for otherwise read operations.
-    /// For example disables lockfile and HEAD.
-    readonly: bool,
+    ///Repository options.
+    options: RepositoryOptions,
     /// Since there might be multiple long running sub-tasks invoked in each
     /// macro tasks (e.g. extract snapshot includes fetching the .esi,
     /// fetching individual pack, etc.), it is useful to use a "factory",
@@ -153,15 +179,15 @@ impl Repository {
     /// # Arguments
     ///
     /// * `path` - The working directory for this [`Repository`].
-    /// * `readonly` - Disable auxiliary writes.
-    pub fn open<P>(path: P, readonly: bool) -> Result<Self, Error>
+    /// * `options` - Repository options.
+    pub fn open<P>(path: P, options: RepositoryOptions) -> Result<Self, Error>
     where
         P: AsRef<Path>,
     {
         Self::open_with_data_dir(
             std::fs::canonicalize(path)?,
             std::fs::canonicalize(REPO_DIR)?,
-            readonly,
+            options,
         )
     }
 
@@ -171,8 +197,12 @@ impl Repository {
     ///
     /// * `path` - The working directory for this [`Repository`].
     /// * `data_dir` - The path to the elfshaker repository.
-    /// * `readonly` - Disable auxiliary writes.
-    pub fn open_with_data_dir<P1, P2>(path: P1, data_dir: P2, readonly: bool) -> Result<Self, Error>
+    /// * `options` - Repository options.
+    pub fn open_with_data_dir<P1, P2>(
+        path: P1,
+        data_dir: P2,
+        options: RepositoryOptions,
+    ) -> Result<Self, Error>
     where
         P1: AsRef<Path>,
         P2: AsRef<Path>,
@@ -188,7 +218,7 @@ impl Repository {
             return Err(Error::RepositoryNotFound);
         }
 
-        let lock_file = if readonly {
+        let lock_file = if options.readonly {
             None
         } else {
             Some(fs::File::create(data_dir.join("mutex"))?)
@@ -207,7 +237,7 @@ impl Repository {
         Ok(Repository {
             path,
             data_dir,
-            readonly,
+            options,
             progress_reporter_factory: Box::new(|_| ProgressReporter::dummy()),
             lock_file,
             is_locked_exclusively: AtomicBool::new(false),
@@ -235,7 +265,7 @@ impl Repository {
     // Reads the state of HEAD. If the file does not exist, returns None values.
     // If ctime/mtime cannot be determined, returns None.
     pub fn read_head(&self) -> Result<(Option<SnapshotId>, Option<SystemTime>), Error> {
-        if self.readonly {
+        if self.options.readonly {
             return Ok((None, None));
         }
         let path = self.data_dir().join(HEAD_FILE);
@@ -776,7 +806,7 @@ impl Repository {
 
     /// Updates the HEAD snapshot id.
     pub fn update_head(&mut self, snapshot_id: &SnapshotId) -> Result<(), Error> {
-        if self.readonly {
+        if self.options.readonly {
             return Ok(());
         }
 
@@ -1357,7 +1387,7 @@ mod tests {
         let repo = Repository {
             path: "/repo".into(),
             data_dir: "/repo/elfshaker_data".into(),
-            readonly: false,
+            options: RepositoryOptions::default(),
             progress_reporter_factory: Box::new(|_| ProgressReporter::dummy()),
             lock_file: Some(fs::File::create(&test_lock).unwrap()),
             is_locked_exclusively: AtomicBool::new(false),
